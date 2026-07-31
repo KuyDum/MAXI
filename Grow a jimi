@@ -1,0 +1,147 @@
+-- 1. โหลด Rayfield Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- 2. สร้าง Window
+local Window = Rayfield:CreateWindow({
+   Name = "Main Hub 🚀",
+   LoadingTitle = "Loading Script...",
+   LoadingSubtitle = "by Assistant",
+   ConfigurationSaving = { Enabled = false },
+   KeySystem = false,
+})
+
+-- 3. สร้าง Tabs
+local ShopTab = Window:CreateTab("Gear Shop", 4483362458)
+local TeleportTab = Window:CreateTab("Teleports", 4483362458)
+
+-------------------------------------------------------------------
+-- [ แท็บที่ 1: GEAR SHOP ]
+-------------------------------------------------------------------
+
+local function buyGear(gearName)
+    local args = { gearName }
+    local success, result = pcall(function()
+        return game:GetService("ReplicatedStorage"):WaitForChild("RequestGearPurchase"):InvokeServer(unpack(args))
+    end)
+    
+    if success then
+        Rayfield:Notify({
+            Title = "Success!",
+            Content = "Bought: " .. gearName,
+            Duration = 3,
+            Image = 4483362458,
+        })
+    else
+        Rayfield:Notify({
+            Title = "Error!",
+            Content = "Failed to buy: " .. gearName,
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+end
+
+ShopTab:CreateSection("Single Purchase")
+
+ShopTab:CreateButton({
+   Name = "Buy CropRemover",
+   Callback = function() buyGear("CropRemover") end,
+})
+
+ShopTab:CreateButton({
+   Name = "Buy Ladder",
+   Callback = function() buyGear("Ladder") end,
+})
+
+ShopTab:CreateButton({
+   Name = "Buy PlantLocker",
+   Callback = function() buyGear("PlantLocker") end,
+})
+
+ShopTab:CreateSection("Auto Buy Settings")
+
+local selectedGear = "PlantLocker"
+local autoBuyActive = false
+
+ShopTab:CreateDropdown({
+   Name = "Select Gear to Auto Buy",
+   Options = {"CropRemover", "Ladder", "PlantLocker"},
+   CurrentOption = {"PlantLocker"},
+   MultipleOptions = false,
+   Flag = "GearDropdown",
+   Callback = function(Option)
+       selectedGear = Option[1]
+   end,
+})
+
+ShopTab:CreateToggle({
+   Name = "Enable Auto Buy",
+   CurrentValue = false,
+   Flag = "AutoBuyToggle",
+   Callback = function(Value)
+       autoBuyActive = Value
+       task.spawn(function()
+           while autoBuyActive do
+               local args = { selectedGear }
+               game:GetService("ReplicatedStorage"):WaitForChild("RequestGearPurchase"):InvokeServer(unpack(args))
+               task.wait(1)
+           end
+       end)
+   end,
+})
+
+-------------------------------------------------------------------
+-- [ แท็บที่ 2: TELEPORTS ]
+-------------------------------------------------------------------
+
+local function sendTeleport(locationName)
+    local args = { locationName }
+    local success, result = pcall(function()
+        game:GetService("ReplicatedStorage"):WaitForChild("TeleportRequest"):FireServer(unpack(args))
+    end)
+    
+    if success then
+        Rayfield:Notify({
+            Title = "Teleported!",
+            Content = "Teleported to: " .. locationName,
+            Duration = 3,
+            Image = 4483362458,
+        })
+    else
+        Rayfield:Notify({
+            Title = "Error!",
+            Content = "Failed to teleport.",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+end
+
+TeleportTab:CreateSection("Quick Teleport Buttons")
+
+TeleportTab:CreateButton({
+   Name = "Teleport to Sell Area",
+   Callback = function()
+       sendTeleport("TeleporterSell")
+   end,
+})
+
+TeleportTab:CreateButton({
+   Name = "Teleport to Seeds Area",
+   Callback = function()
+       sendTeleport("TeleporterSeeds")
+   end,
+})
+
+TeleportTab:CreateSection("Dropdown Teleport")
+
+TeleportTab:CreateDropdown({
+   Name = "Select Destination",
+   Options = {"TeleporterSell", "TeleporterSeeds"},
+   CurrentOption = {"TeleporterSeeds"},
+   MultipleOptions = false,
+   Flag = "TeleportDropdown",
+   Callback = function(Option)
+       sendTeleport(Option[1])
+   end,
+})
